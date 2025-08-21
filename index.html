@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aplikasi Pengingat Jam Tidur</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      text-align: center;
+      padding: 2em 1em;
+      background: #1f1f1f;
+    }
+
+    header h1 {
+      font-size: 2.5em;
+      margin: 0;
+      color: #00d1b2;
+    }
+
+    main {
+      max-width: 800px;
+      margin: auto;
+      padding: 2em;
+    }
+
+    section {
+      background: #222;
+      padding: 1.5em;
+      border-radius: 10px;
+      margin-bottom: 2em;
+    }
+
+    section h2 {
+      color: #00d1b2;
+    }
+
+    label {
+      display: block;
+      margin-top: 1em;
+    }
+
+    input[type="time"] {
+      width: 100%;
+      padding: 0.5em;
+      font-size: 1em;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button {
+      margin-top: 1em;
+      padding: 0.75em 1.5em;
+      font-size: 1em;
+      background: #00d1b2;
+      color: #121212;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 1em;
+      padding: 1em;
+      background: #333;
+      border-left: 5px solid #00d1b2;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1em;
+      font-size: 0.9em;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⏰ Aplikasi Pengingat Jam Tidur</h1>
+    <p>Hitung waktu tidur dan bangun terbaik berdasarkan siklus tidur.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Masukkan Jam Bangun</h2>
+      <label for="wakeTime">Saya ingin bangun pukul:</label>
+      <input type="time" id="wakeTime" />
+      <button onclick="calculateSleepTimes()">Hitung Waktu Tidur Ideal</button>
+      <div class="result" id="sleepResult"></div>
+    </section>
+
+    <section>
+      <h2>Masukkan Jam Tidur</h2>
+      <label for="sleepTime">Saya akan tidur pukul:</label>
+      <input type="time" id="sleepTime" />
+      <button onclick="calculateWakeTimes()">Hitung Waktu Bangun Ideal</button>
+      <div class="result" id="wakeResult"></div>
+    </section>
+
+    <section>
+      <h2>Pengingat Jam Tidur</h2>
+      <p>Aktifkan notifikasi untuk pengingat (saat website terbuka).</p>
+      <button onclick="setReminder()">Setel Pengingat Tidur 8 Jam dari Sekarang</button>
+      <div class="result" id="reminderResult"></div>
+    </section>
+  </main>
+
+  <footer>
+    Dibuat oleh ChatGPT | OpenAI | Indonesia 🇮🇩
+  </footer>
+
+  <script>
+    function calculateSleepTimes() {
+      const input = document.getElementById("wakeTime").value;
+      const resultDiv = document.getElementById("sleepResult");
+
+      if (!input) {
+        resultDiv.innerHTML = "<p>Silakan masukkan jam bangun.</p>";
+        return;
+      }
+
+      const [h, m] = input.split(":").map(Number);
+      const wakeTime = new Date();
+      wakeTime.setHours(h, m, 0, 0);
+
+      const suggestions = [];
+      for (let i = 6; i >= 3; i--) {
+        const sleepTime = new Date(wakeTime.getTime() - i * 90 * 60000);
+        suggestions.push(formatTime(sleepTime));
+      }
+
+      resultDiv.innerHTML = `
+        <p>Jika Anda ingin bangun pukul <strong>${formatTime(wakeTime)}</strong>, sebaiknya tidur pada salah satu waktu berikut:</p>
+        <ul>${suggestions.map(t => `<li>${t}</li>`).join("")}</ul>
+        <p><em>Tips: Butuh sekitar 15 menit untuk tertidur.</em></p>
+      `;
+    }
+
+    function calculateWakeTimes() {
+      const input = document.getElementById("sleepTime").value;
+      const resultDiv = document.getElementById("wakeResult");
+
+      if (!input) {
+        resultDiv.innerHTML = "<p>Silakan masukkan jam tidur.</p>";
+        return;
+      }
+
+      const [h, m] = input.split(":").map(Number);
+      const sleepTime = new Date();
+      sleepTime.setHours(h, m, 0, 0);
+
+      const suggestions = [];
+      for (let i = 3; i <= 6; i++) {
+        const wakeTime = new Date(sleepTime.getTime() + i * 90 * 60000);
+        suggestions.push(formatTime(wakeTime));
+      }
+
+      resultDiv.innerHTML = `
+        <p>Jika Anda tidur pukul <strong>${formatTime(sleepTime)}</strong>, Anda bisa bangun dengan segar pada:</p>
+        <ul>${suggestions.map(t => `<li>${t}</li>`).join("")}</ul>
+        <p><em>Setiap siklus tidur sekitar 90 menit. 5-6 siklus (7.5 - 9 jam) ideal untuk orang dewasa.</em></p>
+      `;
+    }
+
+    function formatTime(date) {
+      let h = date.getHours();
+      let m = date.getMinutes();
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12;
+      h = h ? h : 12;
+      m = m < 10 ? '0' + m : m;
+      return `${h}:${m} ${ampm}`;
+    }
+
+    function setReminder() {
+      const resultDiv = document.getElementById("reminderResult");
+
+      if (!("Notification" in window)) {
+        resultDiv.innerHTML = "<p>Browser tidak mendukung notifikasi.</p>";
+        return;
+      }
+
+      Notification.requestPermission().then(permission => {
+        if (permission !== "granted") {
+          resultDiv.innerHTML = "<p>Izinkan notifikasi untuk mengaktifkan pengingat.</p>";
+          return;
+        }
+
+        const delay = 8 * 60 * 60 * 1000;
+        setTimeout(() => {
+          new Notification("⏰ Saatnya Tidur!", {
+            body: "Sudah 8 jam sejak Anda mengatur pengingat.",
+            icon: "https://cdn-icons-png.flaticon.com/512/3103/3103446.png"
+          });
+        }, delay);
+
+        resultDiv.innerHTML = "<p>Pengingat telah disetel untuk 8 jam ke depan.</p>";
+      });
+    }
+  </script>
+</body>
+</html>
